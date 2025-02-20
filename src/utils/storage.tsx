@@ -1,29 +1,44 @@
 import { AUTH } from "./auth";
 
-const storage = {
+export const storage = {
 	getToken: () => {
-		return window.localStorage.getItem("token");
+		try {
+			return window?.localStorage?.getItem("token") || null;
+		} catch (e) {
+			console.log('Storage access failed:', e);
+			return null;
+		}
 	},
 	setToken: (token: string) => {
-		window.localStorage.setItem("token", token);
+		try {
+			window?.localStorage?.setItem("token", token);
+		} catch (e) {
+			console.log('Storage access failed:', e);
+		}
 	},
 	clearToken: () => {
-		window.localStorage.removeItem("token");
+		try {
+			window?.localStorage?.removeItem("token");
+		} catch (e) {
+			console.log('Storage access failed:', e);
+		}
 	},
-	validateRememberMe:()=>{
-		if(window.localStorage.getItem(AUTH.REMEMBERME)===AUTH.TRUE)
-		{
-			return true;
+	validateRememberMe: () => {
+		try {
+			return window?.localStorage?.getItem(AUTH.REMEMBERME) === AUTH.TRUE;
+		} catch (e) {
+			console.log('Storage access failed:', e);
+			return false;
 		}
-		else{
-			return false
+	},
+	storeRememberMe: (token: string) => {
+		try {
+			window?.localStorage?.setItem(AUTH.REMEMBERME, token);
+		} catch (e) {
+			console.log('Storage access failed:', e);
 		}
 	}
-	,
-	storeRememberMe:(token:string)=>{
-		window.localStorage.setItem(AUTH.REMEMBERME, token);
-	}
-
 };
 
+export default storage;
 export default storage;

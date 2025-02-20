@@ -4,9 +4,14 @@ import { API_URL } from "../config";
 import storage from "../utils/storage";
 
 function authRequestInterceptor(config: InternalAxiosRequestConfig) {
-	const niyoToken = window.localStorage.getItem('niyoToken');
+	let niyoToken = null;
+	try {
+		niyoToken = window?.localStorage?.getItem('niyoToken');
+	} catch (e) {
+		console.log('Storage access failed:', e);
+	}
 
-	const token = niyoToken ? niyoToken : storage.getToken();
+	const token = niyoToken || storage.getToken();
 
 	config.headers = config.headers || {};
 
@@ -24,13 +29,26 @@ export const axios = Axios.create({
 axios.interceptors.request.use(authRequestInterceptor);
 axios.interceptors.response.use(
 	(response) => {
-	  return response.data;
+		return response.data;
 	},
 	(error) => {
 		if (error.response && error.response.status === 401 && storage.getToken()) {
-			localStorage.clear();
-			window.location.href = '/login';
+			try {
+				window?.localStorage?.clear();
+				window?.location?.assign('/login');
+			} catch (e) {
+				console.log('Navigation failed:', e);
+			}
 		}
 		return Promise.reject(error.response);
 	}
-  );
+);
+
+const getBaseUrl = () => {
+	try {
+		return window?.location?.origin || '';
+	} catch (e) {
+		console.log('Location access failed:', e);
+		return '';
+	}
+};

@@ -1,36 +1,24 @@
 import { useEffect, useState } from "react";
 
 export default function useResponsiveFontSize() {
-    const getWindowDimensions = () => {
-        try {
-            return {
-                width: window?.innerWidth || 0,
-                height: window?.innerHeight || 0
-            };
-        } catch (e) {
-            console.log('Window dimensions access failed:', e);
-            return { width: 0, height: 0 };
-        }
-    };
+    const getFontSize = () => 
+        (typeof window !== "undefined" && window.innerWidth < 450 ? "16px" : "18px");
 
-    const getFontSize = () => (getWindowDimensions().width < 450 ? "16px" : "18px");
-    const [fontSize, setFontSize] = useState(getFontSize);
+    const [fontSize, setFontSize] = useState(getFontSize());
 
     useEffect(() => {
+        if (typeof window === "undefined") return; // Prevents errors in SSR
+
         const onResize = () => {
             setFontSize(getFontSize());
         };
 
-        try {
-            window?.addEventListener?.("resize", onResize);
-            return () => {
-                window?.removeEventListener?.("resize", onResize);
-            };
-        } catch (e) {
-            console.log('Event listener failed:', e);
-            return () => {};
-        }
-    }, []);
+        window.addEventListener("resize", onResize);
+        
+        return () => {
+            window.removeEventListener("resize", onResize);
+        };
+    }, []); // Dependency array ensures it runs only once on mount
 
     return fontSize;
 }

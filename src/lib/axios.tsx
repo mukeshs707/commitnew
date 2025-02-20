@@ -1,15 +1,10 @@
 import Axios, { InternalAxiosRequestConfig } from "axios";
-
 import { API_URL } from "../config";
 import storage from "../utils/storage";
 
 function authRequestInterceptor(config: InternalAxiosRequestConfig) {
-	let niyoToken = null;
-	try {
-		niyoToken = window?.localStorage?.getItem('niyoToken');
-	} catch (e) {
-		console.log('Storage access failed:', e);
-	}
+	const niyoToken =
+		typeof window !== "undefined" ? window.localStorage.getItem("niyoToken") : null;
 
 	const token = niyoToken || storage.getToken();
 
@@ -19,6 +14,7 @@ function authRequestInterceptor(config: InternalAxiosRequestConfig) {
 		config.headers.authorization = `Bearer ${token}`;
 	}
 	config.headers.Accept = "application/json";
+	
 	return config;
 }
 
@@ -28,27 +24,17 @@ export const axios = Axios.create({
 
 axios.interceptors.request.use(authRequestInterceptor);
 axios.interceptors.response.use(
-	(response) => {
-		return response.data;
-	},
+	(response) => response.data,
 	(error) => {
-		if (error.response && error.response.status === 401 && storage.getToken()) {
-			try {
-				window?.localStorage?.clear();
-				window?.location?.assign('/login');
-			} catch (e) {
-				console.log('Navigation failed:', e);
-			}
+		if (
+			typeof window !== "undefined" &&
+			error.response &&
+			error.response.status === 401 &&
+			storage.getToken()
+		) {
+			storage.clearToken();
+			window.location.href = "/login";
 		}
 		return Promise.reject(error.response);
 	}
 );
-
-const getBaseUrl = () => {
-	try {
-		return window?.location?.origin || '';
-	} catch (e) {
-		console.log('Location access failed:', e);
-		return '';
-	}
-};
